@@ -7,6 +7,7 @@ from django.shortcuts import redirect
 from django.contrib.auth.models import User
 from rango.models import UserProfile
 from rango.forms import UserForm, UserProfileForm
+from datetime import datetime
 
 def register(request):
  # A boolean value for telling the template
@@ -63,8 +64,28 @@ user_form = UserForm()
 profile_form = UserProfileForm()
 
 # Render the template depending on the context.
-   return render(request,
+return render(request),
   'rango/register.html',
   context = {'user_form': user_form,
   'profile_form': profile_form,
   'registered': registered})
+
+def visitor_cookie_handler(request, response):
+# Get the number of visits to the site.
+# We use the COOKIES.get() function to obtain the visits cookie.
+# If the cookie exists, the value returned is casted to an integer.
+# If the cookie doesn't exist, then the default value of 1 is used.
+    visits = int(request.COOKIES.get('visits', '1'))
+last_visit_cookie = request.COOKIES.get('last_visit', str(datetime.now()))
+last_visit_time = datetime.strptime(last_visit_cookie[:-7],
+'%Y-%m-%d %H:%M:%S')
+# If it's been more than a day since the last visit...
+if (datetime.now() - last_visit_time).days > 0:
+visits = visits + 1
+# Update the last visit cookie now that we have updated the count
+response.set_cookie('last_visit', str(datetime.now()))
+else:
+# Set the last visit cookie
+response.set_cookie('last_visit', last_visit_cookie)
+# Update/set the visits cookie
+response.set_cookie('visits', visits)
